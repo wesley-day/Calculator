@@ -34,7 +34,6 @@ constants = {
     "pi" : np.pi,
     "e" : np.e
 }
-symbols = {"PI", "E", "VAR"}
 
 def match_tok(target, toks):
     tok = toks[0][0]
@@ -89,7 +88,7 @@ def parse(toks):
     for i, (token, value) in enumerate(toks):
         # this doesn't work
         if (token == "NUM" or token == "CONST") \
-                and i < len(toks) - 1 and toks[i + 1][0] in symbols:
+                and i < len(toks) - 1 and toks[i + 1][1] in constants.keys():
             new_toks.append((token, value))
             new_toks.append(("MULT", None))
         else:
@@ -97,7 +96,6 @@ def parse(toks):
                 token, value = "NUM", constants[token]
             new_toks.append((token, value))
 
-    print(new_toks)
     toks_left, expr, graph_mode = parse_additive(new_toks)
     if toks_left:
         raise ParseError("Unparsed tokens:", toks_left)
