@@ -14,6 +14,10 @@ class Value:
     def evaluate(self):
         return self.neg * self.val
 
+    def __str__(self):
+        neg = "" if self.neg == 1 else "-"
+        return f"{neg}{str(self.val)}"
+
 class Function:
     # All numbers should be floats at this point.
 
@@ -64,11 +68,15 @@ class Function:
 
     def evaluate(self):
         return self.neg * Function.functions[self.fun](self.expr.evaluate())
+    
+    def __str__(self):
+        neg = "" if self.neg == 1 else "-"
+        return f"{neg}{self.fun}({self.expr})"
 
 class Binop:
     def div(x, y):
         if y == 0:
-            raise ValueError("Cannot divide by 0")
+            raise ValueError("Undefined")
         return x / y
 
     operations = {
@@ -87,6 +95,10 @@ class Binop:
 
     def evaluate(self):
         return self.neg * Binop.operations[self.op](self.expr1.evaluate(), self.expr2.evaluate())
+    
+    def __str__(self):
+        neg = "" if self.neg == 1 else "-"
+        return f"{neg}{self.op}({self.expr1}, {self.expr2})"
 
 constants = {
     "pi": np.pi,
@@ -99,7 +111,6 @@ def match_tok(target, toks):
         raise ParseError("Invalid syntax")
     return toks[1:]
      
-# Every expression must start with LPAREN, FUN, VAR, or NUM.
 def parse_primary(toks):
     tok = toks[0]
     if tok[0] == "LPAREN":
@@ -121,7 +132,7 @@ def parse_primary(toks):
         toks_left, expr, graph_mode = parse_primary(toks[1:])
         expr.neg = -1
         return toks_left, expr, graph_mode 
-    raise ParseError("Invalid input")
+    raise ParseError("Invalid syntax")
 
 def parse_exponential(toks):
     toks1, expr1, graph_mode1 = parse_primary(toks)
@@ -150,8 +161,6 @@ def parse_additive(toks):
 def preprocess(toks):
     new_toks = []
     for i, (token, value) in enumerate(toks):
-        # Should not cause problems if input is something like '2 1'
-        # because whitespace is removed.
         if token in {"RPAREN", "FACT", "CONST", "VAR", "NUM"} and \
                 (i < len(toks) - 1 and toks[i + 1][0] in {"LPAREN", "FUN", "CONST", "VAR", "NUM"}):
             new_toks.append((token, value))
@@ -165,5 +174,5 @@ def parse(toks):
     toks = preprocess(toks)
     toks_left, expr, graph_mode = parse_additive(toks)
     if toks_left:
-        raise ParseError("Unparsed tokens:", toks_left)
+        raise ParseError("Invalid syntax")
     return expr, graph_mode

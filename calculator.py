@@ -5,7 +5,6 @@ import calc_parser as cp
 
 # TODO
 # add factorial
-# let value come into next line
 
 ROUND_THRESH = 1.0e-12
 NUM_SAMPLES = 1000
@@ -30,6 +29,7 @@ def interpret(expr, graph_mode):
     if graph_mode:
         graph(expr)
     else:
+        print(expr)
         val = expr.evaluate()
         if abs(val - round(val)) <= ROUND_THRESH:
             val = round(val)
@@ -56,7 +56,7 @@ def process_input(line):
         expr, graph_mode = cp.parse(toks)
         ans = interpret(expr, graph_mode)
         print(ans)
-    except Exception as e:
+    except (ValueError, cp.ParseError) as e:
         print("Error:", e)
         return True
     return True

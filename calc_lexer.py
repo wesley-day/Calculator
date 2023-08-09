@@ -37,6 +37,6 @@ def tokenize(line, ans):
                 line = re.sub(pattern, "", line, count=1)
                 break
         else:
-            raise ValueError("Invalid input (LEXER)")
+            raise ValueError("Invalid input")
     
     return toks
