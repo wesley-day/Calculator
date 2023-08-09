@@ -4,6 +4,7 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
+# handle undefined tan values
 # add negative numbers
 # add factorial
 
