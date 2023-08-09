@@ -15,27 +15,32 @@ class Value:
         return self.neg * self.val
 
 class Function:
+    # All numbers should be floats at this point.
+
     def sqrt(x):
-        if x < 0:
+        if isinstance(x, float) and x < 0:
             raise ValueError("Cannot take square root of value < 0")
         return np.sqrt(x)
-    
-    # still doesn't work
+
     def tan(x):
-        return Binop.div(np.sin(x), np.cos(x))
+        if isinstance(x, float):
+            cosx = np.cos(x)
+            if abs(cosx - round(cosx)) <= calc.ROUND_THRESH and round(cosx) == 0:
+                raise ValueError("Undefined")
+        return np.tan(x)
 
     def ln(x):
-        if x <= 0:
+        if isinstance(x, float) and x <= 0:
             raise ValueError("Cannot take log of value <= 0")
         return np.log(x)
     
     def lg(x):
-        if x <= 0:
+        if isinstance(x, float) and x <= 0:
             raise ValueError("Cannot take log of value <= 0")
         return np.log2(x)
     
     def log(x):
-        if x <= 0:
+        if isinstance(x, float) and x <= 0:
             raise ValueError("Cannot take log of value <= 0")
         return np.log10(x)
 
@@ -47,7 +52,9 @@ class Function:
         "tan": tan,
         "ln": ln,
         "lg": lg,
-        "log": log
+        "log": log,
+        "floor": np.floor,
+        "ceil": np.ceil
     }
 
     def __init__(self, fun, expr):
@@ -89,7 +96,7 @@ constants = {
 def match_tok(target, toks):
     tok = toks[0][0]
     if target != tok:
-        raise ParseError(f"Target {target} did not match {tok}")
+        raise ParseError("Invalid syntax")
     return toks[1:]
      
 # Every expression must start with LPAREN, FUN, VAR, or NUM.

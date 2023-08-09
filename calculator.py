@@ -4,15 +4,13 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
-# 3.900000000 ^ 03480 returns 0
-# 0123.00 returns 0
-# handle undefined tan values
-# let value come into next line
 # add factorial
+# let value come into next line
 
 ROUND_THRESH = 1.0e-12
 NUM_SAMPLES = 1000
 domain = (-10, 10)
+ans = None
 
 def set_domain(min_x, max_x):
     global domain
@@ -35,7 +33,7 @@ def interpret(expr, graph_mode):
         val = expr.evaluate()
         if abs(val - round(val)) <= ROUND_THRESH:
             val = round(val)
-        print(val)
+        return val
 
 def process_input(line):
     if line == "exit" or line == "quit":
@@ -53,9 +51,11 @@ def process_input(line):
             set_domain(min_x, max_x)
         return True
     try:
-        toks = cl.tokenize(line)
+        global ans
+        toks = cl.tokenize(line, ans)
         expr, graph_mode = cp.parse(toks)
-        interpret(expr, graph_mode)
+        ans = interpret(expr, graph_mode)
+        print(ans)
     except Exception as e:
         print("Error:", e)
         return True
@@ -68,7 +68,7 @@ def main():
         while process_input(line):
             print("calc> ", end="")
             line = input()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         print()
         return
 
