@@ -4,8 +4,10 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
+# 3.900000000 ^ 03480 returns 0
+# 0123.00 returns 0
 # handle undefined tan values
-# add negative numbers
+# let value come into next line
 # add factorial
 
 ROUND_THRESH = 1.0e-12
@@ -15,6 +17,7 @@ domain = (-10, 10)
 def set_domain(min_x, max_x):
     global domain
     domain = (min_x, max_x)
+    print(domain)
 
 def graph(expr):
     y = expr.evaluate()
@@ -41,9 +44,9 @@ def process_input(line):
         return True
     if line == "configure" or line == "config":
         print("Min x = ", end="")
-        min_x = input()
+        min_x = int(input())
         print("Max x = ", end="")
-        max_x = input()
+        max_x = int(input())
         if min_x >= max_x:
             print("Min x must be less than max x")
         else:
@@ -53,17 +56,17 @@ def process_input(line):
         toks = cl.tokenize(line)
         expr, graph_mode = cp.parse(toks)
         interpret(expr, graph_mode)
-    except (ValueError, cp.ParseError) as e:
-        print(e)
+    except Exception as e:
+        print("Error:", e)
         return True
     return True
 
 def main():
-    print("calc>", end="")
-    line = input()
     try:
+        print("calc> ", end="")
+        line = input()
         while process_input(line):
-            print("calc>", end="")
+            print("calc> ", end="")
             line = input()
     except KeyboardInterrupt:
         print()

@@ -9,31 +9,54 @@ class ParseError(Exception):
 class Value:
     def __init__(self, val):
         self.val = val
+        self.neg = 1
 
     def evaluate(self):
-        return self.val
+        return self.neg * self.val
 
 class Function:
+    def sqrt(x):
+        if x < 0:
+            raise ValueError("Cannot take square root of value < 0")
+        return np.sqrt(x)
+    
+    # still doesn't work
+    def tan(x):
+        return Binop.div(np.sin(x), np.cos(x))
+
     def ln(x):
         if x <= 0:
             raise ValueError("Cannot take log of value <= 0")
         return np.log(x)
     
+    def lg(x):
+        if x <= 0:
+            raise ValueError("Cannot take log of value <= 0")
+        return np.log2(x)
+    
+    def log(x):
+        if x <= 0:
+            raise ValueError("Cannot take log of value <= 0")
+        return np.log10(x)
+
     functions = {
-        "sqrt": np.sqrt,
+        "sqrt": sqrt,
         "exp": np.exp,
         "sin": np.sin,
         "cos": np.cos,
-        "tan": np.tan,
-        "ln": ln
+        "tan": tan,
+        "ln": ln,
+        "lg": lg,
+        "log": log
     }
 
     def __init__(self, fun, expr):
         self.fun = fun
         self.expr = expr
+        self.neg = 1
 
     def evaluate(self):
-        return Function.functions[self.fun](self.expr.evaluate())
+        return self.neg * Function.functions[self.fun](self.expr.evaluate())
 
 class Binop:
     def div(x, y):
@@ -53,9 +76,10 @@ class Binop:
         self.op = op
         self.expr1 = expr1
         self.expr2 = expr2
+        self.neg = 1
 
     def evaluate(self):
-        return Binop.operations[self.op](self.expr1.evaluate(), self.expr2.evaluate())
+        return self.neg * Binop.operations[self.op](self.expr1.evaluate(), self.expr2.evaluate())
 
 constants = {
     "pi": np.pi,
@@ -86,6 +110,10 @@ def parse_primary(toks):
         return toks[1:], Value(np.linspace(*calc.domain, num=calc.NUM_SAMPLES)), True
     if tok[0] == "NUM":
         return toks[1:], Value(tok[1]), False
+    if tok[0] == "SUB":
+        toks_left, expr, graph_mode = parse_primary(toks[1:])
+        expr.neg = -1
+        return toks_left, expr, graph_mode 
     raise ParseError("Invalid input")
 
 def parse_exponential(toks):
@@ -111,16 +139,14 @@ def parse_additive(toks):
     toks2, expr2, graph_mode2 = parse_additive(toks1[1:])
     return toks2, Binop(op, expr1, expr2), graph_mode1 or graph_mode2
 
-# Makes implied multiplication explicit (e.g. (2)(2) -> (2) * (2))
+# Makes implied multiplication explicit (e.g. (2)(2) -> (2) * (2) and 5pi -> 5 * pi).
 def preprocess(toks):
     new_toks = []
     for i, (token, value) in enumerate(toks):
-        currIsVal = token in {"RPAREN", "FACT", "CONST", "VAR", "NUM"}
-        nextIsVal = i < len(toks) - 1 and toks[i + 1][0] in {"LPAREN", "FUN", "CONST", "VAR", "NUM"}
-
         # Should not cause problems if input is something like '2 1'
         # because whitespace is removed.
-        if currIsVal and nextIsVal:
+        if token in {"RPAREN", "FACT", "CONST", "VAR", "NUM"} and \
+                (i < len(toks) - 1 and toks[i + 1][0] in {"LPAREN", "FUN", "CONST", "VAR", "NUM"}):
             new_toks.append((token, value))
             new_toks.append(("MULT", None))
         else:

@@ -10,7 +10,7 @@ tok_patterns = [
     ("ADD", re.compile(r"^\+")),
     ("SUB", re.compile(r"^-")),
     # ("FACT", re.compile(r"^!")),
-    ("FUN", re.compile(r"^(sqrt|exp|sin|cos|tan|ln)")),
+    ("FUN", re.compile(r"^(sqrt|exp|sin|cos|tan|ln|lg|log)")),
     ("CONST", re.compile(r"^(pi|e)")),
     ("VAR", re.compile(r"^x")),
     ("NUM", re.compile(r"^(\d+|\d+\.\d+|\.\d+)")),
