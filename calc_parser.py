@@ -65,7 +65,8 @@ class Function:
         "log": log,
         "floor": np.floor,
         "ceil": np.ceil,
-        "fact": fact
+        "fact": fact,
+        "abs": np.abs
     }
 
     def __init__(self, fun, expr):
@@ -86,10 +87,16 @@ class Binop:
             raise ValueError("Undefined")
         return x / y
 
+    def mod(x, y):
+        if y == 0:
+            raise ValueError("Undefined")
+        return x % y
+
     operations = {
         "POW": (lambda x, y: x ** y),
         "MULT": (lambda x, y: x * y),
         "DIV": div,
+        "MOD": mod,
         "ADD": (lambda x, y: x + y),
         "SUB": (lambda x, y: x - y)
     }
@@ -156,9 +163,9 @@ def parse_exponential(toks):
 
 def parse_multiplicitive(toks):
     toks1, expr1, graph_mode1 = parse_exponential(toks)
-    if not toks1 or toks1[0][0] != "MULT" and toks1[0][0] != "DIV":
+    if not toks1 or toks1[0][0] != "MULT" and toks1[0][0] != "DIV" and toks1[0][0] != "MOD":
         return toks1, expr1, graph_mode1
-    op = "MULT" if toks1[0][0] == "MULT" else "DIV"
+    op = "MULT" if toks1[0][0] == "MULT" else "DIV" if toks1[0][0] == "DIV" else "MOD"
     toks2, expr2, graph_mode2 = parse_multiplicitive(toks1[1:])
     return toks2, Binop(op, expr1, expr2), graph_mode1 or graph_mode2
 
