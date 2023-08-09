@@ -9,59 +9,84 @@ def set_domain(min_x, max_x):
 class ParseError(Exception):
     pass
 
+# An expression is either a Value, Function, or Binop
+
+class Value:
+    def __init__(self, val):
+        self.val = val
+
+    def evaluate(self):
+        return self.val
+
+class Function:
+    functions = {
+        "sqrt": np.sqrt,
+        "exp": np.exp,
+        "sin": np.sin,
+        "cos": np.cos,
+        "tan": np.tan
+    }
+
+    def __init__(self, fun, expr):
+        self.fun = fun
+        self.expr = expr
+
+    def evaluate(self):
+        return Function.functions[self.fun](self.expr.evaluate())
+
 class Binop:
     operations = {
-        "EXP": (lambda x, y: x ** y),
+        "POW": (lambda x, y: x ** y),
         "MULT": (lambda x, y: x * y),
         "DIV": (lambda x, y: x / y),
         "ADD": (lambda x, y: x + y),
         "SUB": (lambda x, y: x - y)
     }
 
-    # An expression is either a value or a Binop
     def __init__(self, op, expr1, expr2):
         self.op = op
         self.expr1 = expr1
         self.expr2 = expr2
 
     def evaluate(self):
-        val1 = self.expr1.evaluate() if isinstance(self.expr1, Binop) else self.expr1
-        val2 = self.expr2.evaluate() if isinstance(self.expr2, Binop) else self.expr2
-        return Binop.operations[self.op](val1, val2)
-
+        return Binop.operations[self.op](self.expr1.evaluate(), self.expr2.evaluate())
 
 constants = {
-    "pi" : np.pi,
-    "e" : np.e
+    "pi": np.pi,
+    "e": np.e
 }
 
 def match_tok(target, toks):
     tok = toks[0][0]
     if target != tok:
-        raise ParseError("Target token did not match")
+        raise ParseError(f"Target {target} did not match {tok}")
     return toks[1:]
      
-# Every expression must start with LPAREN, VAR, or NUM.
-# Constants should have already been converted into NUMs.
+# Every expression must start with LPAREN, FUN, VAR, or NUM.
 def parse_primary(toks):
     tok = toks[0]
     if tok[0] == "LPAREN":
         toks_left, expr, graph_mode = parse_additive(toks[1:])
         toks_left = match_tok("RPAREN", toks_left)
         return toks_left, expr, graph_mode
+    if tok[0] == "FUN":
+        toks_left = match_tok("LPAREN", toks[1:])
+        toks_left, expr, graph_mode = parse_additive(toks_left)
+        toks_left = match_tok("RPAREN", toks_left)
+        return toks_left, Function(tok[1], expr), graph_mode
     if tok[0] == "CONST":
-        return toks[1:], constants[tok[1]], False
+        return toks[1:], Value(constants[tok[1]]), False
     if tok[0] == "VAR":
-        return toks[1:], np.linspace(*domain), True
+        return toks[1:], Value(np.linspace(*domain)), True
     if tok[0] == "NUM":
-        return toks[1:], tok[1], False
+        return toks[1:], Value(tok[1]), False
 
 def parse_exponential(toks):
     toks1, expr1, graph_mode1 = parse_primary(toks)
-    if not toks1 or toks1[0][0] != "EXP":
+    if not toks1 or toks1[0][0] != "POW":
         return toks1, expr1, graph_mode1
     toks2, expr2, graph_mode2 = parse_exponential(toks1[1:])
-    return toks2, Binop("EXP", expr1, expr2), graph_mode1 or graph_mode2
+    return toks2, Binop("POW", expr1, expr2), graph_mode1 or graph_mode2
 
 def parse_multiplicitive(toks):
     toks1, expr1, graph_mode1 = parse_exponential(toks)
@@ -79,24 +104,26 @@ def parse_additive(toks):
     toks2, expr2, graph_mode2 = parse_additive(toks1[1:]) # this might not work as intended
     return toks2, Binop(op, expr1, expr2), graph_mode1 or graph_mode2
 
-# Should only be called by the main method.
-# Functions within the parsing process should call _parse.
-def parse(toks):
-    # Making implied multiplication explicit (e.g. 5x + 2 -> 5 * x + 2)
-    # and replacing constants with their values (e.g. pi -> 3.14159...)
+# Makes implied multiplication explicit (e.g. (2)(2) -> (2) * (2))
+def preprocess(toks):
     new_toks = []
     for i, (token, value) in enumerate(toks):
-        # this doesn't work
-        if (token == "NUM" or token == "CONST") \
-                and i < len(toks) - 1 and toks[i + 1][1] in constants.keys():
+        currIsVal = token in {"RPAREN", "CONST", "VAR", "NUM"}
+        nextIsVal = i < len(toks) - 1 and toks[i + 1][0] in {"LPAREN", "FUN", "CONST", "VAR", "NUM"}
+
+        # Should not cause problems if input is something like '2 1'
+        # because whitespace is removed.
+        if currIsVal and nextIsVal:
             new_toks.append((token, value))
             new_toks.append(("MULT", None))
         else:
-            if token in constants.keys():
-                token, value = "NUM", constants[token]
             new_toks.append((token, value))
-
-    toks_left, expr, graph_mode = parse_additive(new_toks)
+        
+    return new_toks
+    
+def parse(toks):
+    toks = preprocess(toks)
+    toks_left, expr, graph_mode = parse_additive(toks)
     if toks_left:
         raise ParseError("Unparsed tokens:", toks_left)
     return expr, graph_mode

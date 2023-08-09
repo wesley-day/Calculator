@@ -3,14 +3,17 @@ import matplotlib.pyplot as plt
 import calc_lexer as cl
 import calc_parser as cp
 
+# TODO
+# add factorial
+
+ROUND_THRESH = 1.0e-12
+
 def graph(expr):
-    y = expr.evaluate() if isinstance(expr, cp.Binop) else expr
+    y = expr.evaluate()
     plt.figure(figsize=(6, 6))
-    plt.axhline(0, color='black', linewidth=2)  # Horizontal line at y=0
-    plt.axvline(0, color='black', linewidth=2)  # Vertical line at x=0
+    plt.axhline(0, color='black', linewidth=1)
+    plt.axvline(0, color='black', linewidth=1)
     plt.plot(np.linspace(*cp.domain), y)
-    plt.axhline(0, color='black', linewidth=2)
-    plt.axvline(0, color='black', linewidth=2)
     plt.grid(True)
     plt.show()
 
@@ -18,32 +21,41 @@ def interpret(expr, graph_mode):
     if graph_mode:
         graph(expr)
     else:
-        val = expr.evaluate() if isinstance(expr, cp.Binop) else expr
-        print(int(val)) if val.is_integer() else print(val)
+        val = expr.evaluate()
+        if abs(val - round(val)) <= ROUND_THRESH:
+            val = round(val)
+        print(val)
 
 def main():
-    print("===============Calculator===============")
-    while True:
-        print(">", end="")
-        line = input()
-        if line == "exit" or line == "quit":
-            break
-        if line == "":
-            continue
-        if line == "configure" or line == "config":
-            print("Min x = ", end="")
-            min_x = input()
-            print("Max x = ", end="")
-            max_x = input()
-            if min_x >= max_x:
-                print("Min x must be less than max x")
-            else:
-                cp.set_domain(min_x, max_x)
-            continue
-
-        toks = cl.tokenize(line)
-        expr, graph_mode = cp.parse(toks)
-        interpret(expr, graph_mode)
+    # print("===============Calculator===============")
+    try:
+        while True:
+            print("calc>", end="")
+            line = input()
+            if line == "exit" or line == "quit":
+                break
+            if line == "":
+                continue
+            if line == "configure" or line == "config":
+                print("Min x = ", end="")
+                min_x = input()
+                print("Max x = ", end="")
+                max_x = input()
+                if min_x >= max_x:
+                    print("Min x must be less than max x")
+                else:
+                    cp.set_domain(min_x, max_x)
+                continue
+            try:
+                toks = cl.tokenize(line)
+                expr, graph_mode = cp.parse(toks)
+            except (ValueError, cp.ParseError) as e:
+                print(e)
+                continue
+            interpret(expr, graph_mode)
+    except KeyboardInterrupt:
+        print()
+        return
 
 if __name__ == "__main__":
     main()
