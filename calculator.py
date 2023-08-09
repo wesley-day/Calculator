@@ -32,33 +32,37 @@ def interpret(expr, graph_mode):
             val = round(val)
         print(val)
 
-def main():
-    # print("===============Calculator===============")
+def process_input(line):
+    if line == "exit" or line == "quit":
+        return False
+    if line == "":
+        return True
+    if line == "configure" or line == "config":
+        print("Min x = ", end="")
+        min_x = input()
+        print("Max x = ", end="")
+        max_x = input()
+        if min_x >= max_x:
+            print("Min x must be less than max x")
+        else:
+            set_domain(min_x, max_x)
+        return True
     try:
-        while True:
+        toks = cl.tokenize(line)
+        expr, graph_mode = cp.parse(toks)
+        interpret(expr, graph_mode)
+    except (ValueError, cp.ParseError) as e:
+        print(e)
+        return True
+    return True
+
+def main():
+    print("calc>", end="")
+    line = input()
+    try:
+        while process_input(line):
             print("calc>", end="")
             line = input()
-            if line == "exit" or line == "quit":
-                break
-            if line == "":
-                continue
-            if line == "configure" or line == "config":
-                print("Min x = ", end="")
-                min_x = input()
-                print("Max x = ", end="")
-                max_x = input()
-                if min_x >= max_x:
-                    print("Min x must be less than max x")
-                else:
-                    set_domain(min_x, max_x)
-                continue
-            try:
-                toks = cl.tokenize(line)
-                expr, graph_mode = cp.parse(toks)
-            except (ValueError, cp.ParseError) as e:
-                print(e)
-                continue
-            interpret(expr, graph_mode)
     except KeyboardInterrupt:
         print()
         return

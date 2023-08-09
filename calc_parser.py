@@ -14,12 +14,18 @@ class Value:
         return self.val
 
 class Function:
+    def ln(x):
+        if x <= 0:
+            raise ValueError("Cannot take log of value <= 0")
+        return np.log(x)
+    
     functions = {
         "sqrt": np.sqrt,
         "exp": np.exp,
         "sin": np.sin,
         "cos": np.cos,
-        "tan": np.tan
+        "tan": np.tan,
+        "ln": ln
     }
 
     def __init__(self, fun, expr):
@@ -30,10 +36,15 @@ class Function:
         return Function.functions[self.fun](self.expr.evaluate())
 
 class Binop:
+    def div(x, y):
+        if y == 0:
+            raise ValueError("Cannot divide by 0")
+        return x / y
+
     operations = {
         "POW": (lambda x, y: x ** y),
         "MULT": (lambda x, y: x * y),
-        "DIV": (lambda x, y: x / y),
+        "DIV": div,
         "ADD": (lambda x, y: x + y),
         "SUB": (lambda x, y: x - y)
     }
@@ -75,6 +86,7 @@ def parse_primary(toks):
         return toks[1:], Value(np.linspace(*calc.domain, num=calc.NUM_SAMPLES)), True
     if tok[0] == "NUM":
         return toks[1:], Value(tok[1]), False
+    raise ParseError("Invalid input")
 
 def parse_exponential(toks):
     toks1, expr1, graph_mode1 = parse_primary(toks)
@@ -96,14 +108,14 @@ def parse_additive(toks):
     if not toks1 or toks1[0][0] != "ADD" and toks1[0][0] != "SUB":
         return toks1, expr1, graph_mode1
     op = "ADD" if toks1[0][0] == "ADD" else "SUB"
-    toks2, expr2, graph_mode2 = parse_additive(toks1[1:]) # this might not work as intended
+    toks2, expr2, graph_mode2 = parse_additive(toks1[1:])
     return toks2, Binop(op, expr1, expr2), graph_mode1 or graph_mode2
 
 # Makes implied multiplication explicit (e.g. (2)(2) -> (2) * (2))
 def preprocess(toks):
     new_toks = []
     for i, (token, value) in enumerate(toks):
-        currIsVal = token in {"RPAREN", "CONST", "VAR", "NUM"}
+        currIsVal = token in {"RPAREN", "FACT", "CONST", "VAR", "NUM"}
         nextIsVal = i < len(toks) - 1 and toks[i + 1][0] in {"LPAREN", "FUN", "CONST", "VAR", "NUM"}
 
         # Should not cause problems if input is something like '2 1'
