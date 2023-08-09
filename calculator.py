@@ -4,6 +4,7 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
+# add negative numbers
 # add factorial
 
 ROUND_THRESH = 1.0e-12
