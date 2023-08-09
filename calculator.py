@@ -4,7 +4,6 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
-# add factorial
 
 ROUND_THRESH = 1.0e-12
 NUM_SAMPLES = 1000
@@ -29,7 +28,6 @@ def interpret(expr, graph_mode):
     if graph_mode:
         graph(expr)
     else:
-        print(expr)
         val = expr.evaluate()
         if abs(val - round(val)) <= ROUND_THRESH:
             val = round(val)

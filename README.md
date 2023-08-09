@@ -12,4 +12,5 @@ ln(x)  -log base e
 lg(x)  -log base 2  
 log(x) -log base 10  
 floor(x)  
-ceil(x)
+ceil(x)  
+x!  

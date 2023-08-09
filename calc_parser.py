@@ -1,5 +1,6 @@
 import numpy as np
 import calculator as calc
+import math
 
 class ParseError(Exception):
     pass
@@ -48,6 +49,11 @@ class Function:
             raise ValueError("Cannot take log of value <= 0")
         return np.log10(x)
 
+    def fact(x):
+        if not isinstance(x, float) or abs(x - int(x)) > calc.ROUND_THRESH or x < 0:
+            raise ValueError("Undefined")
+        return math.factorial(int(x))
+
     functions = {
         "sqrt": sqrt,
         "exp": np.exp,
@@ -58,7 +64,8 @@ class Function:
         "lg": lg,
         "log": log,
         "floor": np.floor,
-        "ceil": np.ceil
+        "ceil": np.ceil,
+        "fact": fact
     }
 
     def __init__(self, fun, expr):
@@ -134,8 +141,14 @@ def parse_primary(toks):
         return toks_left, expr, graph_mode 
     raise ParseError("Invalid syntax")
 
+def parse_factorial(toks):
+    toks, expr, graph_mode = parse_primary(toks)
+    if not toks or toks[0][0] != "FACT":
+        return toks, expr, graph_mode
+    return toks[1:], Function("fact", expr), graph_mode
+
 def parse_exponential(toks):
-    toks1, expr1, graph_mode1 = parse_primary(toks)
+    toks1, expr1, graph_mode1 = parse_factorial(toks)
     if not toks1 or toks1[0][0] != "POW":
         return toks1, expr1, graph_mode1
     toks2, expr2, graph_mode2 = parse_exponential(toks1[1:])
