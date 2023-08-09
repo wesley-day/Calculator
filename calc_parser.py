@@ -1,10 +1,5 @@
 import numpy as np
-
-domain = (-10, 10)
-
-def set_domain(min_x, max_x):
-    global domain
-    domain = (min_x, max_x)
+import calculator as calc
 
 class ParseError(Exception):
     pass
@@ -77,7 +72,7 @@ def parse_primary(toks):
     if tok[0] == "CONST":
         return toks[1:], Value(constants[tok[1]]), False
     if tok[0] == "VAR":
-        return toks[1:], Value(np.linspace(*domain)), True
+        return toks[1:], Value(np.linspace(*calc.domain, num=calc.NUM_SAMPLES)), True
     if tok[0] == "NUM":
         return toks[1:], Value(tok[1]), False
 

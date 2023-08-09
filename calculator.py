@@ -7,13 +7,19 @@ import calc_parser as cp
 # add factorial
 
 ROUND_THRESH = 1.0e-12
+NUM_SAMPLES = 1000
+domain = (-10, 10)
+
+def set_domain(min_x, max_x):
+    global domain
+    domain = (min_x, max_x)
 
 def graph(expr):
     y = expr.evaluate()
     plt.figure(figsize=(6, 6))
     plt.axhline(0, color='black', linewidth=1)
     plt.axvline(0, color='black', linewidth=1)
-    plt.plot(np.linspace(*cp.domain), y)
+    plt.plot(np.linspace(*domain, num=NUM_SAMPLES), y)
     plt.grid(True)
     plt.show()
 
@@ -44,7 +50,7 @@ def main():
                 if min_x >= max_x:
                     print("Min x must be less than max x")
                 else:
-                    cp.set_domain(min_x, max_x)
+                    set_domain(min_x, max_x)
                 continue
             try:
                 toks = cl.tokenize(line)
