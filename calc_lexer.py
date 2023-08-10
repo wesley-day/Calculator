@@ -2,9 +2,10 @@ import re
 
 whitespace_re = re.compile(r"\s+")
 tok_patterns = [
+    ("COMMA", re.compile(r"^,")),
     ("LPAREN", re.compile(r"^\(")),
     ("RPAREN", re.compile(r"^\)")),
-    ("POW", re.compile(r"^\^")),
+    ("POW", re.compile(r"^(\^|\*\*)")),
     ("MULT", re.compile(r"^\*")),
     ("DIV", re.compile(r"^/")),
     ("MOD", re.compile(r"^%")),

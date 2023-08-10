@@ -1,6 +1,7 @@
 import numpy as np
 import calculator as calc
 import math
+from collections import defaultdict
 
 class ParseError(Exception):
     pass
@@ -20,7 +21,7 @@ class Value:
         return f"{neg}{str(self.val)}"
 
 class Function:
-    # All numbers should be floats at this point.
+    # All numbers should be floats at the point when the function is called.
 
     def sqrt(x):
         if isinstance(x, float) and x < 0:
@@ -69,17 +70,21 @@ class Function:
         "abs": np.abs
     }
 
-    def __init__(self, fun, expr):
+    num_params = defaultdict(lambda: 1, {
+        # functions with > 1 parameters go here
+    })
+
+    def __init__(self, fun, exprs):
         self.fun = fun
-        self.expr = expr
+        self.exprs = exprs
         self.neg = 1
 
     def evaluate(self):
-        return self.neg * Function.functions[self.fun](self.expr.evaluate())
+        return self.neg * Function.functions[self.fun](*[expr.evaluate() for expr in self.exprs])
     
     def __str__(self):
         neg = "" if self.neg == 1 else "-"
-        return f"{neg}{self.fun}({self.expr})"
+        return f"{neg}{self.fun}({self.exprs})"
 
 class Binop:
     def div(x, y):
@@ -116,7 +121,7 @@ class Binop:
 
 constants = {
     "pi": np.pi,
-    "e": np.e
+    "e": np.e,
 }
 
 def match_tok(target, toks):
@@ -133,9 +138,14 @@ def parse_primary(toks):
         return toks_left, expr, graph_mode
     if tok[0] == "FUN":
         toks_left = match_tok("LPAREN", toks[1:])
-        toks_left, expr, graph_mode = parse_additive(toks_left)
+        exprs = []
+        graph_mode = False
+        for _ in range(Function.num_params[tok[1]]):
+            toks_left, expr, gm = parse_additive(toks_left)
+            exprs.append(expr)
+            graph_mode |= gm
         toks_left = match_tok("RPAREN", toks_left)
-        return toks_left, Function(tok[1], expr), graph_mode
+        return toks_left, Function(tok[1], exprs), graph_mode
     if tok[0] == "CONST":
         return toks[1:], Value(constants[tok[1]]), False
     if tok[0] == "VAR":
