@@ -139,7 +139,7 @@ def parse_primary(toks):
     if tok[0] == "CONST":
         return toks[1:], Value(constants[tok[1]]), False
     if tok[0] == "VAR":
-        return toks[1:], Value(np.linspace(*calc.domain, num=calc.NUM_SAMPLES)), True
+        return toks[1:], Value(np.linspace(*calc.DOMAIN, num=calc.NUM_SAMPLES)), True
     if tok[0] == "NUM":
         return toks[1:], Value(tok[1]), False
     if tok[0] == "SUB":
