@@ -94,7 +94,6 @@ def process_input(line):
         if isinstance(e, OverflowError):
             e = "Calculation too large"
         print("Error:", e)
-        return True
     return True
 
 def main():
