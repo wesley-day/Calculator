@@ -90,7 +90,9 @@ def process_input(line):
         toks = cl.tokenize(line, ans)
         expr, graph_mode = cp.parse(toks)
         ans = interpret(expr, graph_mode)
-    except (ValueError, cp.ParseError) as e:
+    except (ValueError, cp.ParseError, OverflowError) as e:
+        if isinstance(e, OverflowError):
+            e = "Calculation too large"
         print("Error:", e)
         return True
     return True
