@@ -14,4 +14,6 @@ log(x) -log base 10
 floor(x)  
 ceil(x)  
 x!  
-abs(x)
+abs(x)  
+gcf(x, y)  
+lcm(x, y)  

@@ -6,6 +6,10 @@ from collections import defaultdict
 class ParseError(Exception):
     pass
 
+    # Helper function
+def isint(x):
+    return isinstance(x, float) and abs(x - int(x)) < calc.ROUND_THRESH
+
 # An expression is either a Value, Function, or Binop
 
 class Value:
@@ -31,7 +35,7 @@ class Function:
     def tan(x):
         if isinstance(x, float):
             cosx = np.cos(x)
-            if abs(cosx - round(cosx)) <= calc.ROUND_THRESH and round(cosx) == 0:
+            if abs(cosx - round(cosx)) < calc.ROUND_THRESH and round(cosx) == 0:
                 raise ValueError("Undefined")
         return np.tan(x)
 
@@ -51,9 +55,19 @@ class Function:
         return np.log10(x)
 
     def fact(x):
-        if not isinstance(x, float) or abs(x - int(x)) > calc.ROUND_THRESH or x < 0:
+        if not isint(x) or x < 0:
             raise ValueError("Undefined")
         return math.factorial(int(x))
+
+    def gcf(x, y):
+        if not isint(x) or not isint(y):
+            raise ValueError("No GCF between non-integers")
+        return math.gcd(int(x), int(y))
+
+    def lcm(x, y):
+        if not isint(x) or not isint(y):
+            raise ValueError("No LCM between non-intergers")
+        return math.lcm(int(x), int(y))
 
     functions = {
         "sqrt": sqrt,
@@ -67,11 +81,14 @@ class Function:
         "floor": np.floor,
         "ceil": np.ceil,
         "fact": fact,
-        "abs": np.abs
+        "abs": np.abs,
+        "gcf": gcf,
+        "lcm": lcm
     }
 
     num_params = defaultdict(lambda: 1, {
-        # functions with > 1 parameters go here
+        "gcf": 2,
+        "lcm": 2
     })
 
     def __init__(self, fun, exprs):
@@ -127,7 +144,7 @@ constants = {
 def match_tok(target, toks):
     tok = toks[0][0]
     if target != tok:
-        raise ParseError("Invalid syntax")
+        raise ParseError(f"Invalid syntax")
     return toks[1:]
      
 def parse_primary(toks):
@@ -140,7 +157,8 @@ def parse_primary(toks):
         toks_left = match_tok("LPAREN", toks[1:])
         exprs = []
         graph_mode = False
-        for _ in range(Function.num_params[tok[1]]):
+        for i in range(Function.num_params[tok[1]]):
+            toks_left = toks_left if i == 0 else match_tok("COMMA", toks_left)
             toks_left, expr, gm = parse_additive(toks_left)
             exprs.append(expr)
             graph_mode |= gm
@@ -155,7 +173,7 @@ def parse_primary(toks):
     if tok[0] == "SUB":
         toks_left, expr, graph_mode = parse_primary(toks[1:])
         expr.neg = -1
-        return toks_left, expr, graph_mode 
+        return toks_left, expr, graph_mode
     raise ParseError("Invalid syntax")
 
 def parse_factorial(toks):
