@@ -59,15 +59,25 @@ class Function:
             raise ValueError("Undefined")
         return math.factorial(int(x))
 
-    def gcf(x, y):
-        if not isint(x) or not isint(y):
+    def gcf(n, m):
+        if not isint(n) or not isint(m):
             raise ValueError("No GCF between non-integers")
-        return math.gcd(int(x), int(y))
+        return math.gcd(int(n), int(m))
 
-    def lcm(x, y):
-        if not isint(x) or not isint(y):
+    def lcm(n, m):
+        if not isint(n) or not isint(m):
             raise ValueError("No LCM between non-intergers")
-        return math.lcm(int(x), int(y))
+        return math.lcm(int(n), int(m))
+
+    def C(n, m):
+        if not isint(n) or not isint(m):
+            raise ValueError("Cannot count combinations of non-integers")
+        return math.factorial(n) // (math.factorial(m) * math.factorial(n - m))
+    
+    def P(n, m):
+        if not isint(n) or not isint(m):
+            raise ValueError("Cannot count permutations of non-integers")
+        return math.factorial(n) // math.factorial(n - m)
 
     functions = {
         "sqrt": sqrt,
@@ -82,13 +92,18 @@ class Function:
         "ceil": np.ceil,
         "fact": fact,
         "abs": np.abs,
+        "round": np.round,
         "gcf": gcf,
-        "lcm": lcm
+        "lcm": lcm,
+        "C": C,
+        "P": P
     }
 
     num_params = defaultdict(lambda: 1, {
         "gcf": 2,
-        "lcm": 2
+        "lcm": 2,
+        "C": 2,
+        "P": 2
     })
 
     def __init__(self, fun, exprs):
