@@ -14,3 +14,16 @@ int prime(uint64_t n) {
     }
     return 1;
 }
+
+/* Returns the nth number in the Fibonocci sequence. */
+// fib(95) > UINT64_MAX
+uint64_t fib(int n) {
+    if (n == 1) return 0;
+    if (n == 2) return 1;
+    uint64_t prev = 0, curr = 1;
+    for (int i = 2; i < n; i++) {
+        curr += prev;
+        prev = curr - prev;
+    }
+    return curr;
+}

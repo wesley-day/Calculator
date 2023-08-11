@@ -4,15 +4,12 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
-# prime function implemented in C
 # complex numbers
-
-# 957293059859827495 - 1 = 957293059859827456
-# this is because int(float(957293059859827495)) = 957293059859827456
 
 ROUND_THRESH = 1.0e-12
 NUM_SAMPLES = 1000
 DOMAIN = (-10, 10)
+COMMAS = False
 ans = None
 
 def graph(expr):
@@ -44,14 +41,14 @@ def interpret(expr, graph_mode):
         val = expr.evaluate()
         if abs(val - round(val)) <= ROUND_THRESH:
             val = round(val)
-        print(val)
+        print(f"{val:,}" if COMMAS else val)
         return val
 
 def configure():
-    print("Edit graph DOMAIN (DOMAIN), number of samples to take for x (samples),",
-          "or rounding threshold (thresh)?\n> ", end="")
+    print("Edit graph DOMAIN (domain), number of samples to take for x (samples),")
+    print("rounding threshold (thresh), or toggle commas (commas)?\n> ", end="")
     arg = input()
-    if arg == "DOMAIN":
+    if arg == "domain":
         print("Min x = ", end="")
         arg = input()
         min_x = int(arg) if arg.isnumeric() else None
@@ -74,11 +71,15 @@ def configure():
     elif arg == "thresh":
         print("New rounding threshold = ", end="")
         arg = input()
-        if not arg.isnumeric():
-            print("Invalid input")
-        else:
+        try:
             global ROUND_THRESH
             ROUND_THRESH = float(arg)
+        except:
+            print("Invalid input")
+    elif arg == "commas":
+        global COMMAS
+        COMMAS = not COMMAS
+        print("Commas now", "on" if COMMAS else "off")
 
 
 def process_input(line):

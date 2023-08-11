@@ -12,6 +12,8 @@ INT64_MIN = -9223372036854775808
 cfunctions = ctypes.CDLL(str(Path(__file__).parent) + "/cfunctions.so")
 cfunctions.prime.argtypes = [ctypes.c_uint64]
 cfunctions.prime.restype = ctypes.c_int
+cfunctions.fib.argtypes = [ctypes.c_int]
+cfunctions.fib.restype = ctypes.c_uint64
 
 class ParseError(Exception):
     pass
@@ -98,10 +100,18 @@ class Function:
     
     def prime(n):
         if not isinstance(n, int) or n < 2:
-            raise ValueError("Non-integers and values < 2 do not have primality")
+            raise ValueError("Primality is defined only for positive integers",
+                             "greater than or equal to 2")
         if n > UINT64_MAX:
             raise ValueError("Calculation too large")
         return cfunctions.prime(n)
+    
+    def fib(n):
+        if not isinstance(n, int) or n < 1:
+            raise ValueError("fib requires a natural number")
+        if n > 94:
+            raise ValueError("Calculation too large")
+        return cfunctions.fib(n)
 
     functions = {
         "sqrt": sqrt,
@@ -121,7 +131,8 @@ class Function:
         "lcm": lcm,
         "C": C,
         "P": P,
-        "prime": prime
+        "prime": prime,
+        "fib": fib
     }
 
     num_params = defaultdict(lambda: 1, {
