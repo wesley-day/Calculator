@@ -1,5 +1,3 @@
-Calculator with graphing capablities.  
-Any expression with 'x' in it will be graphed.  
 Follows PEMDAS for ambigious order of operations.  
   
 Functions: x and y represent real numbers, n and m represent integers  
