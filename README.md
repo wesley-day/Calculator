@@ -20,3 +20,4 @@ gcf(n, m)
 lcm(n, m)  
 C(n, m)  
 P(n, m)  
+prime(n) = 1 if n is prime, 0 otherwise  

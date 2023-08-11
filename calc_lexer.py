@@ -13,7 +13,7 @@ tok_patterns = [
     ("SUB", re.compile(r"^-")),
     ("FACT", re.compile(r"^!")),
     ("ANS", re.compile(r"^ans")),
-    ("FUN", re.compile(r"^(sqrt|exp|sin|cos|tan|ln|lg|log|floor|ceil|abs|round|gcf|lcm|C|P)")),
+    ("FUN", re.compile(r"^(sqrt|exp|sin|cos|tan|ln|lg|log|floor|ceil|abs|round|gcf|lcm|C|P|prime)")),
     ("CONST", re.compile(r"^(pi|e)")),
     ("VAR", re.compile(r"^x")),
     ("NUM", re.compile(r"^(\d+\.\d+|\.\d+|\d+)")),
@@ -31,7 +31,7 @@ def tokenize(line, ans):
                         raise ValueError("Invalid input (ans is not yet defined)")
                     toks.append(("NUM", ans))
                 elif tok == "NUM":
-                    toks.append((tok, float(_match.group())))
+                    toks.append((tok, _match.group()))
                 elif tok == "FUN" or tok == "CONST" or tok == "VAR":
                     toks.append((tok, _match.group()))
                 else:

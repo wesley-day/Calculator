@@ -4,7 +4,11 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
+# prime function implemented in C
 # complex numbers
+
+# 957293059859827495 - 1 = 957293059859827456
+# this is because int(float(957293059859827495)) = 957293059859827456
 
 ROUND_THRESH = 1.0e-12
 NUM_SAMPLES = 1000
@@ -88,6 +92,8 @@ def process_input(line):
     try:
         global ans
         toks = cl.tokenize(line, ans)
+        if not toks:
+            return True
         expr, graph_mode = cp.parse(toks)
         ans = interpret(expr, graph_mode)
     except (ValueError, cp.ParseError, OverflowError) as e:

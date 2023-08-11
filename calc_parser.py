@@ -2,13 +2,32 @@ import numpy as np
 import calculator as calc
 import math
 from collections import defaultdict
+import ctypes
+from pathlib import Path
+
+UINT64_MAX = 18446744073709551615
+INT64_MAX = 9223372036854775807
+INT64_MIN = -9223372036854775808
+
+cfunctions = ctypes.CDLL(str(Path(__file__).parent) + "/cfunctions.so")
+cfunctions.prime.argtypes = [ctypes.c_uint64]
+cfunctions.prime.restype = ctypes.c_int
 
 class ParseError(Exception):
     pass
 
-    # Helper function
-def isint(x):
-    return isinstance(x, float) and abs(x - int(x)) < calc.ROUND_THRESH
+# Helper functions
+def convert_to_number(x: str):
+    try:
+        return int(x)
+    except ValueError:
+        try:
+            return float(x)
+        except ValueError:
+            raise ValueError("Not a number")
+
+def isnumber(x):
+    return isinstance(x, float) or isinstance(x, int)
 
 # An expression is either a Value, Function, or Binop
 
@@ -25,59 +44,64 @@ class Value:
         return f"{neg}{str(self.val)}"
 
 class Function:
-    # All numbers should be floats at the point when the function is called.
-
     def sqrt(x):
-        if isinstance(x, float) and x < 0:
+        if isnumber(x) and x < 0:
             raise ValueError("Cannot take square root of value < 0")
         return np.sqrt(x)
 
     def tan(x):
-        if isinstance(x, float):
+        if isnumber(x):
             cosx = np.cos(x)
             if abs(cosx - round(cosx)) < calc.ROUND_THRESH and round(cosx) == 0:
                 raise ValueError("Undefined")
         return np.tan(x)
 
     def ln(x):
-        if isinstance(x, float) and x <= 0:
+        if isnumber(x) and x <= 0:
             raise ValueError("Cannot take log of value <= 0")
         return np.log(x)
     
     def lg(x):
-        if isinstance(x, float) and x <= 0:
+        if isnumber(x) and x <= 0:
             raise ValueError("Cannot take log of value <= 0")
         return np.log2(x)
     
     def log(x):
-        if isinstance(x, float) and x <= 0:
+        if isnumber(x) and x <= 0:
             raise ValueError("Cannot take log of value <= 0")
         return np.log10(x)
 
-    def fact(x):
-        if not isint(x) or x < 0:
+    def fact(n):
+        if not isinstance(n, int) or n < 0:
             raise ValueError("Undefined")
-        return math.factorial(int(x))
+        return math.factorial(int(n))
 
     def gcf(n, m):
-        if not isint(n) or not isint(m):
+        if not isinstance(n, int) or not isinstance(m, int):
             raise ValueError("No GCF between non-integers")
         return math.gcd(int(n), int(m))
 
     def lcm(n, m):
-        if not isint(n) or not isint(m):
+        if not isinstance(n, int) or not isinstance(m, int):
             raise ValueError("No LCM between non-intergers")
         return math.lcm(int(n), int(m))
 
     def C(n, m):
-        if not isint(n) or not isint(m):
+        if not isinstance(n, int) or not isinstance(m, int):
             raise ValueError("Cannot count combinations of non-integers")
         return math.factorial(n) // (math.factorial(m) * math.factorial(n - m))
     
     def P(n, m):
-        if not isint(n) or not isint(m):
+        if not isinstance(n, int) or not isinstance(m, int):
             raise ValueError("Cannot count permutations of non-integers")
         return math.factorial(n) // math.factorial(n - m)
+    
+    def prime(n):
+        if not isinstance(n, int) or n < 2:
+            raise ValueError("Non-integers and values < 2 do not have primality")
+        if n > UINT64_MAX:
+            raise ValueError("Calculation too large")
+        return cfunctions.prime(n)
 
     functions = {
         "sqrt": sqrt,
@@ -96,7 +120,8 @@ class Function:
         "gcf": gcf,
         "lcm": lcm,
         "C": C,
-        "P": P
+        "P": P,
+        "prime": prime
     }
 
     num_params = defaultdict(lambda: 1, {
@@ -173,7 +198,8 @@ def parse_primary(toks):
         exprs = []
         graph_mode = False
         for i in range(Function.num_params[tok[1]]):
-            toks_left = toks_left if i == 0 else match_tok("COMMA", toks_left)
+            if i > 0:
+                toks_left = match_tok("COMMA", toks_left)
             toks_left, expr, gm = parse_additive(toks_left)
             exprs.append(expr)
             graph_mode |= gm
@@ -184,7 +210,7 @@ def parse_primary(toks):
     if tok[0] == "VAR":
         return toks[1:], Value(np.linspace(*calc.DOMAIN, num=calc.NUM_SAMPLES)), True
     if tok[0] == "NUM":
-        return toks[1:], Value(tok[1]), False
+        return toks[1:], Value(convert_to_number(tok[1])), False
     if tok[0] == "SUB":
         toks_left, expr, graph_mode = parse_primary(toks[1:])
         expr.neg = -1
@@ -195,7 +221,7 @@ def parse_factorial(toks):
     toks, expr, graph_mode = parse_primary(toks)
     if not toks or toks[0][0] != "FACT":
         return toks, expr, graph_mode
-    return toks[1:], Function("fact", expr), graph_mode
+    return toks[1:], Function("fact", [expr]), graph_mode
 
 def parse_exponential(toks):
     toks1, expr1, graph_mode1 = parse_factorial(toks)
