@@ -47,8 +47,11 @@ class Value:
 
 class Function:
     def sqrt(x):
-        if isnumber(x) and x < 0:
-            raise ValueError("Cannot take square root of value < 0")
+        if isnumber(x):
+            if x < 0:
+                raise ValueError("Cannot take square root of value < 0")
+            # Ran into problems with np.sqrt for large integer values
+            return math.sqrt(x)
         return np.sqrt(x)
 
     def tan(x):
