@@ -193,6 +193,8 @@ class Binop:
 constants = {
     "pi": np.pi,
     "e": np.e,
+    "G": 6.67408e-11, # m^3 kg^-1 s^-2
+    "c": 299_792_458 # m/s
 }
 
 def match_tok(target, toks):

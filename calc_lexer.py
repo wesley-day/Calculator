@@ -15,7 +15,7 @@ tok_patterns = [
     ("ANS", re.compile(r"^ans")),
     ("FUN", re.compile(r"^(sqrt|exp|sin|cos|tan|ln|lg|log|floor|ceil|abs|round|"
                        r"gcf|lcm|C|P|prime|fib)")),
-    ("CONST", re.compile(r"^(pi|e)")),
+    ("CONST", re.compile(r"^(pi|e|G|c)")),
     ("VAR", re.compile(r"^x")),
     ("NUM", re.compile(r"^(\d+\.\d+|\.\d+|\d+)")),
 ]
