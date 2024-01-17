@@ -4,18 +4,22 @@ import calc_lexer as cl
 import calc_parser as cp
 
 # TODO
+# 6/2(1+2) should equal 9 not 1
+    # parser is right associative, making it left associative might be difficult
 # complex numbers
+# add ability to create functions on the fly e.g. f(x) = 10x,
+#   will need to remove graphing or change how it is called
 
 ROUND_THRESH = 1.0e-12
 NUM_SAMPLES = 1000
 DOMAIN = (-10, 10)
-COMMAS = False
+COMMAS = True
 ans = None
 
 def graph(expr):
     y = expr.evaluate()
-    x_vals = np.linspace(*DOMAIN, num=NUM_SAMPLES)
-    trace = go.Scatter(x=x_vals, y=y)
+    x = np.linspace(*DOMAIN, num=NUM_SAMPLES)
+    trace = go.Scatter(x=x, y=y)
     
     layout = go.Layout(
         showlegend=False,
@@ -55,7 +59,7 @@ def configure():
         print("Max x = ", end="")
         arg = input()
         max_x = int(arg) if arg.isnumeric() else None
-        if not min_x or not max_x or min_x >= max_x:
+        if min_x is None or max_x is None or min_x >= max_x:
             print("Invalid input")
         else:
             global DOMAIN
@@ -97,7 +101,7 @@ def process_input(line):
             return True
         expr, graph_mode = cp.parse(toks)
         ans = interpret(expr, graph_mode)
-    except (ValueError, cp.ParseError, OverflowError) as e:
+    except (ValueError, TypeError, cp.ParseError, OverflowError) as e:
         if isinstance(e, OverflowError):
             e = "Calculation too large"
         print("Error:", e)

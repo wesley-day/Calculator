@@ -5,9 +5,9 @@ from collections import defaultdict
 import ctypes
 from pathlib import Path
 
-UINT64_MAX = 18446744073709551615
-INT64_MAX = 9223372036854775807
-INT64_MIN = -9223372036854775808
+UINT64_MAX = 0xffffffffffffffff
+INT64_MAX = 0x7fffffffffffffff
+INT64_MIN = -0x8000000000000000
 
 cfunctions = ctypes.CDLL(str(Path(__file__).parent) + "/cfunctions.so")
 cfunctions.prime.argtypes = [ctypes.c_uint64]
@@ -26,7 +26,7 @@ def convert_to_number(x: str):
         try:
             return float(x)
         except ValueError:
-            raise ValueError("Not a number")
+            raise TypeError("Not a number")
 
 def isnumber(x):
     return isinstance(x, float) or isinstance(x, int)
@@ -56,7 +56,7 @@ class Function:
 
     def tan(x):
         if isnumber(x):
-            cosx = np.cos(x)
+            cosx = math.cos(x)
             if abs(cosx - round(cosx)) < calc.ROUND_THRESH and round(cosx) == 0:
                 raise ValueError("Undefined")
         return np.tan(x)
@@ -103,8 +103,8 @@ class Function:
     
     def prime(n):
         if not isinstance(n, int) or n < 2:
-            raise ValueError("Primality is defined only for positive integers",
-                             "greater than or equal to 2")
+            raise ValueError("Primality is defined only for positive integers" + \
+                             " greater than or equal to 2")
         if n > UINT64_MAX:
             raise ValueError("Calculation too large")
         return cfunctions.prime(n)
@@ -112,7 +112,7 @@ class Function:
     def fib(n):
         if not isinstance(n, int) or n < 1:
             raise ValueError("fib requires a natural number")
-        if n > 94:
+        if n > 94: # fib(95) > UINT64_MAX
             raise ValueError("Calculation too large")
         return cfunctions.fib(n)
 
@@ -200,10 +200,12 @@ constants = {
 def match_tok(target, toks):
     tok = toks[0][0]
     if target != tok:
-        raise ParseError(f"Invalid syntax")
+        raise ParseError("Invalid syntax")
     return toks[1:]
      
 def parse_primary(toks):
+    if not toks:
+        raise ParseError("Invalid syntax")
     tok = toks[0]
     if tok[0] == "LPAREN":
         toks_left, expr, graph_mode = parse_additive(toks[1:])
@@ -250,9 +252,8 @@ def parse_multiplicitive(toks):
     toks1, expr1, graph_mode1 = parse_exponential(toks)
     if not toks1 or toks1[0][0] != "MULT" and toks1[0][0] != "DIV" and toks1[0][0] != "MOD":
         return toks1, expr1, graph_mode1
-    op = "MULT" if toks1[0][0] == "MULT" else "DIV" if toks1[0][0] == "DIV" else "MOD"
     toks2, expr2, graph_mode2 = parse_multiplicitive(toks1[1:])
-    return toks2, Binop(op, expr1, expr2), graph_mode1 or graph_mode2
+    return toks2, Binop(toks1[0][0], expr1, expr2), graph_mode1 or graph_mode2
 
 def parse_additive(toks):
     toks1, expr1, graph_mode1 = parse_multiplicitive(toks)
@@ -262,7 +263,7 @@ def parse_additive(toks):
     toks2, expr2, graph_mode2 = parse_additive(toks1[1:])
     return toks2, Binop(op, expr1, expr2), graph_mode1 or graph_mode2
 
-# Makes implied multiplication explicit (e.g. (2)(2) -> (2) * (2) and 5pi -> 5 * pi).
+# Makes implied multiplication explicit (e.g. (2)(2) -> (2) * (2) or 5pi -> 5 * pi).
 def preprocess(toks):
     new_toks = []
     for i, (token, value) in enumerate(toks):

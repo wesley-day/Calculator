@@ -5,10 +5,11 @@ tok_patterns = [
     ("COMMA", re.compile(r"^,")),
     ("LPAREN", re.compile(r"^\(")),
     ("RPAREN", re.compile(r"^\)")),
+    ("EQUAL", re.compile(r"^=")),
     ("POW", re.compile(r"^(\^|\*\*)")),
     ("MULT", re.compile(r"^\*")),
     ("DIV", re.compile(r"^/")),
-    ("MOD", re.compile(r"^%")),
+    ("MOD", re.compile(r"^(%|mod)")),
     ("ADD", re.compile(r"^\+")),
     ("SUB", re.compile(r"^-")),
     ("FACT", re.compile(r"^!")),
@@ -18,6 +19,7 @@ tok_patterns = [
     ("CONST", re.compile(r"^(pi|e|G|c)")),
     ("VAR", re.compile(r"^x")),
     ("NUM", re.compile(r"^(\d+\.\d+|\.\d+|\d+)")),
+    ("USER_FUN", re.compile(r"^\w+"))
 ]
 
 def tokenize(line, ans):
